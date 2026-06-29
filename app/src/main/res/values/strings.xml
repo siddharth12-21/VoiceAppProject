@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Voice Action Assistant</string>
+    <string name="accessibility_service_description">Automates message sending inside WhatsApp, Gmail, and SMS apps based on user voice instructions.</string>
+</resources>
