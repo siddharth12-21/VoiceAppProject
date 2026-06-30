@@ -34,7 +34,7 @@ Use this directory and class mapping to navigate changes efficiently:
    - Always destroy and release the `SpeechRecognizer` in `onDestroy` of `MainActivity`.
    - Ensure you check and handle runtime permission requests (`RECORD_AUDIO`) before launching the recognizer to prevent runtime crashes.
 4. **Multilingual Parsing Consistency:**
-   - When modifying or adding parsing rules in `MainActivity.parseVoiceIntent()`, ensure that you maintain compatibility for all three primary languages (English, Spanish, Hindi). Test modifications using the mock phrases outlined in the [README.md](./README.md).
+   - When modifying or adding parsing rules in `MainActivity.parseVoiceIntent()`, ensure that you maintain compatibility for all three primary languages (English, Spanish, Tamil). Test modifications using the mock phrases outlined in the [README.md](./README.md).
 
 ---
 
