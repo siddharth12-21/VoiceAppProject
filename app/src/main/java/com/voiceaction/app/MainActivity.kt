@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
             // Set language based on selection
             val languageCode = when {
                 binding.rbSpanish.isChecked -> "es-ES"
-                binding.rbHindi.isChecked -> "hi-IN"
+                binding.rbTamil.isChecked -> "ta-IN"
                 else -> "en-US"
             }
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode)
@@ -190,13 +190,13 @@ class MainActivity : AppCompatActivity() {
         parsedMessage = text
 
         // 1. Detect target application
-        if (lowercaseText.contains("whatsapp") || lowercaseText.contains("व्हाट्सएप") || lowercaseText.contains("व्हाट्सप्प")) {
+        if (lowercaseText.contains("whatsapp") || lowercaseText.contains("வாட்ஸ்அப்") || lowercaseText.contains("வாட்ஸ்அப்பில்")) {
             parsedApp = "WhatsApp"
             parsedPackage = "com.whatsapp"
-        } else if (lowercaseText.contains("gmail") || lowercaseText.contains("email") || lowercaseText.contains("correo") || lowercaseText.contains("मेल") || lowercaseText.contains("ईमेल")) {
+        } else if (lowercaseText.contains("gmail") || lowercaseText.contains("email") || lowercaseText.contains("correo") || lowercaseText.contains("ஜிமெயில்") || lowercaseText.contains("மின்னஞ்சல்")) {
             parsedApp = "Gmail"
             parsedPackage = "com.google.android.gm"
-        } else if (lowercaseText.contains("sms") || lowercaseText.contains("message") || lowercaseText.contains("messages") || lowercaseText.contains("मैसेज") || lowercaseText.contains("संदेश")) {
+        } else if (lowercaseText.contains("sms") || lowercaseText.contains("message") || lowercaseText.contains("messages") || lowercaseText.contains("மெசேஜ்") || lowercaseText.contains("குறுஞ்செய்தி")) {
             parsedApp = "SMS"
             parsedPackage = "com.google.android.apps.messaging"
         }
@@ -214,25 +214,38 @@ class MainActivity : AppCompatActivity() {
                 parsedRecipient = text.substring(aIndex + 3, splitIndex).trim()
                 parsedMessage = text.substring(splitIndex + if (diciendoIndex != -1) 10 else 10).trim()
             }
-        } else if (binding.rbHindi.isChecked) {
-            // Hindi parse: "[Rohit] को [whatsapp] पर मैसेज भेजो कि [मैसेज]"
-            // E.g., "रोहित को व्हाट्सएप पर संदेश भेजो कि मैं घर आ रहा हूं"
-            val koIndex = lowercaseText.indexOf(" को ")
-            val kiIndex = lowercaseText.indexOf(" कि ")
-            val sendIndex = lowercaseText.indexOf(" भेजो ")
-
-            if (koIndex != -1) {
-                parsedRecipient = text.substring(0, koIndex).trim()
-                if (kiIndex != -1 && kiIndex > koIndex) {
-                    parsedMessage = text.substring(kiIndex + 4).trim()
-                } else if (sendIndex != -1 && sendIndex > koIndex) {
-                    // Extract message before "भेजो" but after app name
-                    val appWords = listOf("व्हाट्सएप", "व्हाट्सप्प", "whatsapp", "मैसेज", "संदेश", "पर")
-                    var cleanMsg = text.substring(koIndex + 4, sendIndex).trim()
-                    for (word in appWords) {
-                        cleanMsg = cleanMsg.replace(word, "", ignoreCase = true)
+        } else if (binding.rbTamil.isChecked) {
+            // Tamil parse: "[Recipient]க்கு [App]ல் [Message] என்று மெசேஜ் அனுப்பு"
+            // E.g., "ரோஹித்திற்கு வாட்ஸ்அப்பில் நான் 10 நிமிடத்தில் வருகிறேன் என்று மெசேஜ் அனுப்பு"
+            
+            // Find recipient markers: "க்கு", "வுக்கு", "ற்கு"
+            val kkuIndex = lowercaseText.indexOf("க்கு")
+            val irkkuIndex = lowercaseText.indexOf("ற்கு")
+            val recipientEndIndex = if (kkuIndex != -1) kkuIndex else irkkuIndex
+            
+            val endruIndex = lowercaseText.indexOf(" என்று")
+            
+            if (recipientEndIndex != -1) {
+                // Extract and clean recipient
+                var rawRecipient = text.substring(0, recipientEndIndex).trim()
+                // Strip common leading action words if any
+                val sendVerbs = listOf("அனுப்பு", "அனுப்புங்கள்", "மெசேஜ் செய்")
+                for (verb in sendVerbs) {
+                    if (rawRecipient.lowercase().startsWith(verb)) {
+                        rawRecipient = rawRecipient.substring(verb.length).trim()
                     }
-                    parsedMessage = cleanMsg.trim()
+                }
+                parsedRecipient = rawRecipient
+                
+                if (endruIndex != -1 && endruIndex > recipientEndIndex) {
+                    // Extract message between recipient suffix and "என்று"
+                    var rawMessage = text.substring(recipientEndIndex + if (kkuIndex != -1) 3 else 3, endruIndex).trim()
+                    // Strip app names from message body
+                    val appKeywords = listOf("வாட்ஸ்அப்பில்", "வாட்ஸ்அப்", "whatsapp", "ஜிமெயில்", "ஜிமெயிலில்", "மின்னஞ்சல்", "மெசேஜ்", "எஸ்எம்எஸ்")
+                    for (keyword in appKeywords) {
+                        rawMessage = rawMessage.replace(keyword, "", ignoreCase = true)
+                    }
+                    parsedMessage = rawMessage.trim()
                 }
             }
         } else {

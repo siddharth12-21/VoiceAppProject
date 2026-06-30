@@ -101,10 +101,10 @@
             android:layout_marginEnd="8dp"/>
 
         <RadioButton
-            android:id="@+id/rbHindi"
+            android:id="@+id/rbTamil"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="हिन्दी 🇮🇳"
+            android:text="தமிழ் 🇮🇳"
             android:textColor="#E0E0E0"
             android:buttonTint="#BB86FC"
             android:layout_marginEnd="8dp"/>

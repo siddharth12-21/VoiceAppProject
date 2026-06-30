@@ -1,6 +1,6 @@
 # VoiceActionAssistant - AI-Native Multilingual Voice Router 🎙️🤖
 
-An accessibility-driven Android application designed to receive spoken voice commands in multiple languages (English, Spanish, Hindi), transcribe them locally, parse the communication routing intent (target app, contact recipient, message content), and automate the typing and sending process using Android's **Accessibility Service API**.
+An accessibility-driven Android application designed to receive spoken voice commands in multiple languages (English, Spanish, Tamil), transcribe them locally, parse the communication routing intent (target app, contact recipient, message content), and automate the typing and sending process using Android's **Accessibility Service API**.
 
 ---
 
@@ -22,8 +22,8 @@ This application utilizes a simple two-phase pipeline to perform cross-app messa
 ```
 
 ### Key Modules:
-- **Speech Capture & Config:** [MainActivity.kt](./app/src/main/java/com/voiceaction/app/MainActivity.kt) initializes the system microphone, handles the runtime `RECORD_AUDIO` permission, sets up the speech intent with localized codes (`en-US`, `es-ES`, `hi-IN`), and processes transcribing callbacks.
-- **Intent Parsing Engine:** Located in `MainActivity.parseVoiceIntent()`. It runs a rule-based parser that identifies verbs, target apps, and recipients in English, Spanish, or Hindi, extracting the core message text in its original spoken language.
+- **Speech Capture & Config:** [MainActivity.kt](./app/src/main/java/com/voiceaction/app/MainActivity.kt) initializes the system microphone, handles the runtime `RECORD_AUDIO` permission, sets up the speech intent with localized codes (`en-US`, `es-ES`, `ta-IN`), and processes transcribing callbacks.
+- **Intent Parsing Engine:** Located in `MainActivity.parseVoiceIntent()`. It runs a rule-based parser that identifies verbs, target apps, and recipients in English, Spanish, or Tamil, extracting the core message text in its original spoken language.
 - **UI Automation Service:** [VoiceActionAccessibilityService.kt](./app/src/main/java/com/voiceaction/app/VoiceActionAccessibilityService.kt) is an Android `AccessibilityService` that monitors foreground state changes. When triggered, it walks the target app's window node tree, pastes the message text, and clicks the send button.
 - **Service Configuration:** [accessibility_service_config.xml](./app/src/main/res/xml/accessibility_service_config.xml) restricts service events to WhatsApp, Gmail, and Google Messages to maximize performance and protect user privacy.
 
@@ -60,9 +60,9 @@ You can speak to the assistant using natural phrases. Here are examples of succe
 - *"Enviar un correo a Juan diciendo por favor revisa el plan"*
 - *"Enviar mensaje a Pedro diciendo hola"*
 
-### 🇮🇳 Hindi (हिन्दी)
-- *"रोहित को व्हाट्सएप पर संदेश भेजो कि मैं 10 मिनट में आ रहा हूँ"*
-- *"पिताजी को मैसेज भेजो कि सब ठीक है"*
+### 🇮🇳 Tamil (தமிழ்)
+- *"ரோஹித்திற்கு வாட்ஸ்அப்பில் நான் 10 நிமிடத்தில் வருகிறேன் என்று மெசேஜ் அனுப்பு"*
+- *"அப்பாவுக்கு எல்லாம் நலம் என்று மெசேஜ் அனுப்பு"*
 
 ---
 
