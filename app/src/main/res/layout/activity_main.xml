@@ -248,14 +248,49 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <!-- Test Text Command Input Panel (for testing on emulators without microphone input) -->
+    <LinearLayout
+        android:id="@+id/layoutTestInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#1E1E1E"
+        android:padding="8dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rgLanguages">
+
+        <EditText
+            android:id="@+id/etTestCommand"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Or type test command..."
+            android:textColorHint="#666666"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:background="#2C2C2C"
+            android:padding="8dp"
+            android:singleLine="true"/>
+
+        <Button
+            android:id="@+id/btnTestParse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Parse"
+            android:textSize="12sp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#BB86FC"
+            android:textColor="#121212"/>
+    </LinearLayout>
+
     <!-- Console / Live Transcription View -->
     <ScrollView
         android:id="@+id/scrollLog"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/rgLanguages"
+        app:layout_constraintTop_toBottomOf="@id/layoutTestInput"
         app:layout_constraintBottom_toTopOf="@id/tvMicStatus">
 
         <TextView

@@ -63,6 +63,16 @@ class MainActivity : AppCompatActivity() {
         binding.btnConfirmSend.setOnClickListener {
             executeAutomatedAction()
         }
+
+        binding.btnTestParse.setOnClickListener {
+            val testText = binding.etTestCommand.text.toString()
+            if (testText.isNotBlank()) {
+                logMessage("Manual Input: \"$testText\"")
+                parseVoiceIntent(testText)
+            } else {
+                Toast.makeText(this, "Please enter a test command first.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onResume() {
