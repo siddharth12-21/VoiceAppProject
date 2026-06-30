@@ -9,18 +9,17 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
+// Structure to pass automation instruction from Activity to Service
+data class PendingAction(
+    val appPackage: String,
+    val recipient: String,
+    val message: String
+)
+
 class VoiceActionAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "VoiceAccessibility"
-        
-        // Structure to pass automation instruction from Activity to Service
-        data class PendingAction(
-            val appPackage: String,
-            val recipient: String,
-            val message: String
-        )
-
         var pendingAction: PendingAction? = null
     }
 

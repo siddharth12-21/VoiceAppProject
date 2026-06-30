@@ -1,6 +1,7 @@
 package com.voiceaction.app
 
 import android.Manifest
+import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -295,7 +296,7 @@ class MainActivity : AppCompatActivity() {
         logMessage("Executing action... Launching $parsedApp for $parsedRecipient")
 
         // 1. Package instructions for the accessibility service
-        VoiceActionAccessibilityService.pendingAction = VoiceActionAccessibilityService.PendingAction(
+        VoiceActionAccessibilityService.pendingAction = PendingAction(
             appPackage = parsedPackage,
             recipient = parsedRecipient,
             message = finalMessage
