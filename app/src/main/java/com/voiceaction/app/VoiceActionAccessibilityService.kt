@@ -85,8 +85,12 @@ class VoiceActionAccessibilityService : AccessibilityService() {
             // Try to find the search button or search bar to open the chat automatically!
             Log.d(TAG, "WhatsApp: Chat input not found. Checking if search can be opened...")
             
-            // 1. Check if search input field is already active
+            // 1. Check if search input field is already active (by ID, or any EditText on this screen since there's no chat input)
             val searchInputNode = findNodeByViewId(rootNode, "com.whatsapp:id/search_src_text")
+                ?: findNodeByViewId(rootNode, "com.whatsapp:id/search_input")
+                ?: findNodeByViewId(rootNode, "com.whatsapp:id/search_text")
+                ?: findNodeByClassName(rootNode, "android.widget.EditText")
+
             if (searchInputNode != null) {
                 val currentText = searchInputNode.text?.toString() ?: ""
                 if (!currentText.equals(action.recipient, ignoreCase = true)) {
@@ -102,25 +106,28 @@ class VoiceActionAccessibilityService : AccessibilityService() {
                     try { Thread.sleep(800) } catch (e: Exception) {}
                 }
                 
-                // 2. Click the matching contact row from search results
+                // 2. Click the matching contact row from search results (ignoring the search bar itself!)
                 val freshRoot = rootInActiveWindow ?: rootNode
-                val contactNode = findNodeByText(freshRoot, action.recipient)
+                val contactNode = findContactResultNode(freshRoot, action.recipient)
                 if (contactNode != null) {
-                    Log.d(TAG, "WhatsApp: Found contact node. Clicking to open chat.")
+                    Log.d(TAG, "WhatsApp: Found contact row text. Clicking to open chat.")
                     clickNodeOrParent(contactNode)
                 } else {
                     Log.w(TAG, "WhatsApp: Contact row text matching '${action.recipient}' not found in search results yet.")
                 }
             } else {
-                // 3. Search input is not active. Find and click the Search icon.
+                // 3. Search input is not active. Find and click the Search icon/button.
                 val searchBtn = findNodeByViewId(rootNode, "com.whatsapp:id/menuitem_search")
                     ?: findNodeByContentDescription(rootNode, listOf("Search", "Buscar", "தேடு", "Search contacts"))
+                    ?: findNodeByText(rootNode, "Search")
+                    ?: findNodeByText(rootNode, "Buscar")
+                    ?: findNodeByText(rootNode, "தேடு")
                 
                 if (searchBtn != null) {
-                    Log.d(TAG, "WhatsApp: Found search button. Clicking to activate.")
+                    Log.d(TAG, "WhatsApp: Found search button/bar. Clicking to activate.")
                     clickNodeOrParent(searchBtn)
                 } else {
-                    Log.w(TAG, "WhatsApp: Main chat input and search icon not found on screen.")
+                    Log.w(TAG, "WhatsApp: Main chat input and search icon/bar not found on screen.")
                 }
             }
         }
@@ -265,7 +272,25 @@ class VoiceActionAccessibilityService : AccessibilityService() {
         }
         return false
     }
-
+    private fun findContactResultNode(node: AccessibilityNodeInfo?, text: String): AccessibilityNodeInfo? {
+        if (node == null) return null
+        
+        // Ignore EditText nodes so we don't accidentally match the search query input box itself!
+        val className = node.className?.toString() ?: ""
+        if (!className.contains("EditText")) {
+            val nodeText = node.text?.toString()?.lowercase() ?: ""
+            if (nodeText.contains(text.lowercase())) {
+                return node
+            }
+        }
+        
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            val result = findContactResultNode(child, text)
+            if (result != null) return result
+        }
+        return null
+    }
     override fun onInterrupt() {
         Log.d(TAG, "onInterrupt: Service interrupted")
     }
