@@ -101,9 +101,6 @@ class VoiceActionAccessibilityService : AccessibilityService() {
                         action.recipient
                     )
                     searchInputNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
-                    
-                    // Sleep to allow search results to populate
-                    try { Thread.sleep(800) } catch (e: Exception) {}
                 }
                 
                 // 2. Click the matching contact row from search results (ignoring the search bar itself!)

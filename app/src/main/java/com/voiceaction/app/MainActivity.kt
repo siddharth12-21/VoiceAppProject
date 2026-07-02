@@ -41,6 +41,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Initialize SpeechRecognizer once to prevent microphone channel binding leaks
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+
         // Setup button listeners
         binding.btnEnableService.setOnClickListener {
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
@@ -124,13 +127,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognition() {
-        speechRecognizer?.let {
-            try {
-                it.cancel()
-                it.destroy()
-            } catch (e: Exception) {}
-        }
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        // Ensure any active speech session is canceled first
+        speechRecognizer?.cancel()
+        
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             
