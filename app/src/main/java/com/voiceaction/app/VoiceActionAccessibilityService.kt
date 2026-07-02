@@ -85,7 +85,10 @@ class VoiceActionAccessibilityService : AccessibilityService() {
             // Try to find the search button or search bar to open the chat automatically!
             Log.d(TAG, "WhatsApp: Chat input not found. Checking if search can be opened...")
             
-            // 1. Check if search input field is already active (by ID, or any EditText on this screen since there's no chat input)
+            // Log node structure to logcat for active debugging
+            logNodeStructure(rootNode, 0)
+            
+            // 1. Check if search input field is already active
             val searchInputNode = findNodeByViewId(rootNode, "com.whatsapp:id/search_src_text")
                 ?: findNodeByViewId(rootNode, "com.whatsapp:id/search_input")
                 ?: findNodeByViewId(rootNode, "com.whatsapp:id/search_text")
@@ -101,6 +104,9 @@ class VoiceActionAccessibilityService : AccessibilityService() {
                         action.recipient
                     )
                     searchInputNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+                    
+                    // Sleep brief moment for search results list views to load
+                    try { Thread.sleep(600) } catch (e: Exception) {}
                 }
                 
                 // 2. Click the matching contact row from search results (ignoring the search bar itself!)
@@ -113,15 +119,10 @@ class VoiceActionAccessibilityService : AccessibilityService() {
                     Log.w(TAG, "WhatsApp: Contact row text matching '${action.recipient}' not found in search results yet.")
                 }
             } else {
-                // 3. Search input is not active. Find and click the Search icon/button.
-                val searchBtn = findNodeByViewId(rootNode, "com.whatsapp:id/menuitem_search")
-                    ?: findNodeByContentDescription(rootNode, listOf("Search", "Buscar", "தேடு", "Search contacts"))
-                    ?: findNodeByText(rootNode, "Search")
-                    ?: findNodeByText(rootNode, "Buscar")
-                    ?: findNodeByText(rootNode, "தேடு")
-                
+                // 3. Search input is not active. Find and click any node containing "search" keyword text/id/desc
+                val searchBtn = findSearchNode(rootNode)
                 if (searchBtn != null) {
-                    Log.d(TAG, "WhatsApp: Found search button/bar. Clicking to activate.")
+                    Log.d(TAG, "WhatsApp: Found search button/bar container. Clicking to activate.")
                     clickNodeOrParent(searchBtn)
                 } else {
                     Log.w(TAG, "WhatsApp: Main chat input and search icon/bar not found on screen.")
@@ -288,6 +289,51 @@ class VoiceActionAccessibilityService : AccessibilityService() {
         }
         return null
     }
+
+    private fun findSearchNode(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+        if (node == null) return null
+        
+        val id = node.viewIdResourceName?.lowercase() ?: ""
+        val text = node.text?.toString()?.lowercase() ?: ""
+        val desc = node.contentDescription?.toString()?.lowercase() ?: ""
+        
+        if (id.contains("search") || text.contains("search") || text.contains("buscar") || text.contains("தேடு") ||
+            desc.contains("search") || desc.contains("buscar") || desc.contains("தேடு")) {
+            
+            // Ignore actual EditText fields when scanning for the inactive search icon/container button
+            val className = node.className?.toString() ?: ""
+            if (!className.contains("EditText")) {
+                return node
+            }
+        }
+        
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            val result = findSearchNode(child)
+            if (result != null) return result
+        }
+        return null
+    }
+
+    private fun logNodeStructure(node: AccessibilityNodeInfo?, depth: Int) {
+        if (node == null) return
+        val indent = "  ".repeat(depth)
+        val id = node.viewIdResourceName ?: "no-id"
+        val text = node.text?.toString() ?: "no-text"
+        val desc = node.contentDescription?.toString() ?: "no-desc"
+        val className = node.className?.toString() ?: "no-class"
+        val clickable = node.isClickable
+        
+        Log.d(TAG, "${indent}Class: $className | ID: $id | Text: $text | Desc: $desc | Clickable: $clickable")
+        
+        // Limit recursive depth to prevent log overflow
+        if (depth < 5) {
+            for (i in 0 until node.childCount) {
+                logNodeStructure(node.getChild(i), depth + 1)
+            }
+        }
+    }
+
     override fun onInterrupt() {
         Log.d(TAG, "onInterrupt: Service interrupted")
     }
