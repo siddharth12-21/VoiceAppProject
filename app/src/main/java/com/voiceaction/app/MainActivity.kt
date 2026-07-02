@@ -133,6 +133,11 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             
+            // Adjust length settings to prevent cutting off early
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 3000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+
             // Set language based on selection
             val languageCode = when {
                 binding.rbSpanish.isChecked -> "es-ES"
@@ -150,6 +155,17 @@ class MainActivity : AppCompatActivity() {
                 binding.tvMicStatus.text = "Listening... Speak now"
                 binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
                 logMessage("Microphone active. Listening...")
+
+                // Haptic feedback to alert user precisely when to start speaking
+                try {
+                    val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        vibrator.vibrate(android.os.VibrationEffect.createOneShot(100, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(100)
+                    }
+                } catch (e: Exception) {}
             }
 
             override fun onBeginningOfSpeech() {}
@@ -164,6 +180,9 @@ class MainActivity : AppCompatActivity() {
                 binding.tvMicStatus.text = "Error occurred. Tap to retry."
                 binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
                 logMessage("Speech recognition error code: $error")
+                if (error == SpeechRecognizer.ERROR_NO_MATCH) {
+                    logMessage("Tip: Wait for the short vibration feedback before speaking!")
+                }
             }
 
             override fun onResults(results: Bundle?) {
