@@ -45,9 +45,8 @@ class VoiceActionAccessibilityService : AccessibilityService() {
 
     private fun handleWhatsAppAutomation(rootNode: AccessibilityNodeInfo, action: PendingAction) {
         // Step 1: Find text input field (WhatsApp chat input)
-        // Usually has ID 'com.whatsapp:id/entry' or class 'android.widget.EditText'
-        val inputNode = findNodeByViewId(rootNode, "com.whatsapp:id/entry") 
-            ?: findNodeByClassName(rootNode, "android.widget.EditText")
+        // Usually has ID 'com.whatsapp:id/entry'
+        val inputNode = findNodeByViewId(rootNode, "com.whatsapp:id/entry")
 
         if (inputNode != null) {
             Log.d(TAG, "WhatsApp: Found input node. Injecting message.")
@@ -62,8 +61,7 @@ class VoiceActionAccessibilityService : AccessibilityService() {
             
             // Step 2: Find send button
             // Usually has ID 'com.whatsapp:id/send' or content-desc 'Send' / 'Enviar' / 'भेजें'
-            // We sleep briefly to allow WhatsApp UI to update the send button visibility
-            try { Thread.sleep(200) } catch (e: Exception) {}
+            try { Thread.sleep(300) } catch (e: Exception) {}
             
             val freshRoot = rootInActiveWindow ?: rootNode
             val sendButton = findNodeByViewId(freshRoot, "com.whatsapp:id/send")
@@ -83,7 +81,48 @@ class VoiceActionAccessibilityService : AccessibilityService() {
                 Log.w(TAG, "WhatsApp: Send button not found. Message is pasted, waiting for user.")
             }
         } else {
-            Log.w(TAG, "WhatsApp: Input text field not found.")
+            // We are not in the chat screen (inputNode is null).
+            // Try to find the search button or search bar to open the chat automatically!
+            Log.d(TAG, "WhatsApp: Chat input not found. Checking if search can be opened...")
+            
+            // 1. Check if search input field is already active
+            val searchInputNode = findNodeByViewId(rootNode, "com.whatsapp:id/search_src_text")
+            if (searchInputNode != null) {
+                val currentText = searchInputNode.text?.toString() ?: ""
+                if (!currentText.equals(action.recipient, ignoreCase = true)) {
+                    Log.d(TAG, "WhatsApp: Active search bar found. Typing: ${action.recipient}")
+                    val arguments = Bundle()
+                    arguments.putCharSequence(
+                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        action.recipient
+                    )
+                    searchInputNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+                    
+                    // Sleep to allow search results to populate
+                    try { Thread.sleep(800) } catch (e: Exception) {}
+                }
+                
+                // 2. Click the matching contact row from search results
+                val freshRoot = rootInActiveWindow ?: rootNode
+                val contactNode = findNodeByText(freshRoot, action.recipient)
+                if (contactNode != null) {
+                    Log.d(TAG, "WhatsApp: Found contact node. Clicking to open chat.")
+                    clickNodeOrParent(contactNode)
+                } else {
+                    Log.w(TAG, "WhatsApp: Contact row text matching '${action.recipient}' not found in search results yet.")
+                }
+            } else {
+                // 3. Search input is not active. Find and click the Search icon.
+                val searchBtn = findNodeByViewId(rootNode, "com.whatsapp:id/menuitem_search")
+                    ?: findNodeByContentDescription(rootNode, listOf("Search", "Buscar", "தேடு", "Search contacts"))
+                
+                if (searchBtn != null) {
+                    Log.d(TAG, "WhatsApp: Found search button. Clicking to activate.")
+                    clickNodeOrParent(searchBtn)
+                } else {
+                    Log.w(TAG, "WhatsApp: Main chat input and search icon not found on screen.")
+                }
+            }
         }
     }
 
@@ -197,6 +236,34 @@ class VoiceActionAccessibilityService : AccessibilityService() {
         } catch (e: Exception) {}
         
         performGlobalAction(GLOBAL_ACTION_BACK)
+    }
+
+    private fun findNodeByText(node: AccessibilityNodeInfo?, text: String): AccessibilityNodeInfo? {
+        if (node == null) return null
+        val nodeText = node.text?.toString()?.lowercase() ?: ""
+        if (nodeText.contains(text.lowercase())) {
+            return node
+        }
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            val result = findNodeByText(child, text)
+            if (result != null) return result
+        }
+        return null
+    }
+
+    private fun clickNodeOrParent(node: AccessibilityNodeInfo?): Boolean {
+        if (node == null) return false
+        if (node.isClickable) {
+            node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            return true
+        }
+        val parent = node.parent
+        if (parent != null) {
+            val clicked = clickNodeOrParent(parent)
+            if (clicked) return true
+        }
+        return false
     }
 
     override fun onInterrupt() {

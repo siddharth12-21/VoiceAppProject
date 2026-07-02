@@ -124,7 +124,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognition() {
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        val serviceComponent = android.content.ComponentName.unflattenFromString(
+            "com.google.android.googlequicksearchbox/com.google.android.voicesearch.service.SpeechRecognitionService"
+        )
+        speechRecognizer = if (serviceComponent != null) {
+            SpeechRecognizer.createSpeechRecognizer(this, serviceComponent)
+        } else {
+            SpeechRecognizer.createSpeechRecognizer(this)
+        }
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             
