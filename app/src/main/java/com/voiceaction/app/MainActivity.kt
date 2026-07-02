@@ -124,6 +124,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognition() {
+        speechRecognizer?.let {
+            try {
+                it.cancel()
+                it.destroy()
+            } catch (e: Exception) {}
+        }
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
