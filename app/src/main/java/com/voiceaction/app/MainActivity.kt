@@ -41,9 +41,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize SpeechRecognizer once to prevent microphone channel binding leaks
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-
         // Setup button listeners
         binding.btnEnableService.setOnClickListener {
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
@@ -127,8 +124,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognition() {
-        // Ensure any active speech session is canceled first
-        speechRecognizer?.cancel()
+        // Ensure any active speech recognizer is fully cleaned up before starting a new one
+        cleanupSpeechRecognizer()
+        
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -183,6 +182,7 @@ class MainActivity : AppCompatActivity() {
                 if (error == SpeechRecognizer.ERROR_NO_MATCH) {
                     logMessage("Tip: Wait for the short vibration feedback before speaking!")
                 }
+                cleanupSpeechRecognizer()
             }
 
             override fun onResults(results: Bundle?) {
@@ -198,6 +198,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     logMessage("No speech captured. Please try again.")
                 }
+                cleanupSpeechRecognizer()
             }
 
             override fun onPartialResults(partialResults: Bundle?) {}
@@ -208,10 +209,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopSpeechRecognition() {
-        speechRecognizer?.stopListening()
         isListening = false
         binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
         binding.tvMicStatus.text = "Tap microphone to speak"
+        cleanupSpeechRecognizer()
+    }
+
+    private fun cleanupSpeechRecognizer() {
+        try {
+            speechRecognizer?.cancel()
+            speechRecognizer?.destroy()
+        } catch (e: Exception) {
+            // Ignore errors on release
+        } finally {
+            speechRecognizer = null
+        }
     }
 
     // Multilingual Intent Parser Engine
