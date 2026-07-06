@@ -101,6 +101,45 @@ class MainActivity : AppCompatActivity() {
             parseVoiceIntent("Send ready to boss")
         }
         
+        binding.favContactMummy.setOnClickListener {
+            logMessage("Favorite clicked: Mummy")
+            parsedRecipient = "Mummy"
+            parsedApp = "WhatsApp"
+            parsedPackage = "com.whatsapp"
+            parsedMessage = ""
+            
+            binding.tvConfirmRecipient.text = parsedRecipient
+            binding.tvConfirmApp.text = parsedApp
+            binding.etConfirmMessage.setText("")
+            binding.cardConfirmation.visibility = View.VISIBLE
+        }
+
+        binding.favContactDad.setOnClickListener {
+            logMessage("Favorite clicked: Dad")
+            parsedRecipient = "Dad"
+            parsedApp = "SMS"
+            parsedPackage = "com.google.android.apps.messaging"
+            parsedMessage = ""
+            
+            binding.tvConfirmRecipient.text = parsedRecipient
+            binding.tvConfirmApp.text = parsedApp
+            binding.etConfirmMessage.setText("")
+            binding.cardConfirmation.visibility = View.VISIBLE
+        }
+
+        binding.favContactBoss.setOnClickListener {
+            logMessage("Favorite clicked: Boss")
+            parsedRecipient = "Boss"
+            parsedApp = "Telegram"
+            parsedPackage = "org.telegram.messenger"
+            parsedMessage = ""
+            
+            binding.tvConfirmRecipient.text = parsedRecipient
+            binding.tvConfirmApp.text = parsedApp
+            binding.etConfirmMessage.setText("")
+            binding.cardConfirmation.visibility = View.VISIBLE
+        }
+        
         loadHistoryFromPrefs()
     }
 
@@ -189,21 +228,24 @@ class MainActivity : AppCompatActivity() {
         val lowercaseText = text.lowercase(Locale.getDefault())
 
         // Default settings
-        parsedApp = "WhatsApp"
-        parsedPackage = "com.whatsapp"
-        parsedRecipient = "Unknown"
-        parsedMessage = text
+        var appResult = "WhatsApp"
+        var packageResult = "com.whatsapp"
+        var recipientResult = "Unknown"
+        var messageResult = text
 
         // 1. Detect target application
         if (lowercaseText.contains("whatsapp") || lowercaseText.contains("வாட்ஸ்அப்") || lowercaseText.contains("வாட்ஸ்அப்பில்")) {
-            parsedApp = "WhatsApp"
-            parsedPackage = "com.whatsapp"
+            appResult = "WhatsApp"
+            packageResult = "com.whatsapp"
+        } else if (lowercaseText.contains("telegram") || lowercaseText.contains("டெலிகிராம்")) {
+            appResult = "Telegram"
+            packageResult = "org.telegram.messenger"
         } else if (lowercaseText.contains("gmail") || lowercaseText.contains("email") || lowercaseText.contains("correo") || lowercaseText.contains("ஜிமெயில்") || lowercaseText.contains("மின்னஞ்சல்")) {
-            parsedApp = "Gmail"
-            parsedPackage = "com.google.android.gm"
-        } else if (lowercaseText.contains("sms") || lowercaseText.contains("message") || lowercaseText.contains("messages") || lowercaseText.contains("மெசேஜ்") || lowercaseText.contains("குறுஞ்செய்தி")) {
-            parsedApp = "SMS"
-            parsedPackage = "com.google.android.apps.messaging"
+            appResult = "Gmail"
+            packageResult = "com.google.android.gm"
+        } else if (lowercaseText.contains("sms") || lowercaseText.contains("message") || lowercaseText.contains("messages") || lowercaseText.contains("text") || lowercaseText.contains("மெசேஜ்") || lowercaseText.contains("குறுஞ்செய்தி")) {
+            appResult = "SMS"
+            packageResult = "com.google.android.apps.messaging"
         }
 
         // 2. Multilingual recipient and message extraction
@@ -212,70 +254,86 @@ class MainActivity : AppCompatActivity() {
             val aIndex = lowercaseText.indexOf(" a ")
             val diciendoIndex = lowercaseText.indexOf(" diciendo ")
             val queDiceIndex = lowercaseText.indexOf(" que dice ")
-
             val splitIndex = if (diciendoIndex != -1) diciendoIndex else queDiceIndex
 
             if (aIndex != -1 && splitIndex != -1 && splitIndex > aIndex) {
-                parsedRecipient = text.substring(aIndex + 3, splitIndex).trim()
-                parsedMessage = text.substring(splitIndex + if (diciendoIndex != -1) 10 else 10).trim()
+                recipientResult = text.substring(aIndex + 3, splitIndex).trim()
+                messageResult = text.substring(splitIndex + 10).trim()
+            } else if (aIndex != -1) {
+                recipientResult = text.substring(aIndex + 3).trim()
+                var rawMsg = text.substring(0, aIndex).trim()
+                val stripVerbs = listOf("enviar whatsapp", "enviar mensaje", "enviar correo", "enviar", "escribir")
+                for (verb in stripVerbs) {
+                    if (rawMsg.lowercase().startsWith(verb)) {
+                        rawMsg = rawMsg.substring(verb.length).trim()
+                    }
+                }
+                messageResult = rawMsg
             }
         } else if (binding.rbTamil.isChecked) {
             // Tamil parse: "[Recipient]க்கு [App]ல் [Message] என்று மெசேஜ் அனுப்பு"
-            // E.g., "ரோஹித்திற்கு வாட்ஸ்அப்பில் நான் 10 நிமிடத்தில் வருகிறேன் என்று மெசேஜ் அனுப்பு"
-            
-            // Find recipient markers: "க்கு", "வுக்கு", "ற்கு"
             val kkuIndex = lowercaseText.indexOf("க்கு")
             val irkkuIndex = lowercaseText.indexOf("ற்கு")
             val recipientEndIndex = if (kkuIndex != -1) kkuIndex else irkkuIndex
-            
             val endruIndex = lowercaseText.indexOf(" என்று")
             
             if (recipientEndIndex != -1) {
-                // Extract and clean recipient
                 var rawRecipient = text.substring(0, recipientEndIndex).trim()
-                // Strip common leading action words if any
                 val sendVerbs = listOf("அனுப்பு", "அனுப்புங்கள்", "மெசேஜ் செய்")
                 for (verb in sendVerbs) {
                     if (rawRecipient.lowercase().startsWith(verb)) {
                         rawRecipient = rawRecipient.substring(verb.length).trim()
                     }
                 }
-                parsedRecipient = rawRecipient
+                recipientResult = rawRecipient
                 
                 if (endruIndex != -1 && endruIndex > recipientEndIndex) {
-                    // Extract message between recipient suffix and "என்று"
-                    var rawMessage = text.substring(recipientEndIndex + if (kkuIndex != -1) 3 else 3, endruIndex).trim()
-                    // Strip app names from message body
+                    var rawMessage = text.substring(recipientEndIndex + 3, endruIndex).trim()
                     val appKeywords = listOf("வாட்ஸ்அப்பில்", "வாட்ஸ்அப்", "whatsapp", "ஜிமெயில்", "ஜிமெயிலில்", "மின்னஞ்சல்", "மெசேஜ்", "எஸ்எம்எஸ்")
                     for (keyword in appKeywords) {
                         rawMessage = rawMessage.replace(keyword, "", ignoreCase = true)
                     }
-                    parsedMessage = rawMessage.trim()
+                    messageResult = rawMessage.trim()
                 }
             }
         } else {
             // English parse
-            // Pattern 1: "... saying [message]" or "... telling [message]"
+            // Pattern 1: "... saying [message]" or "... telling [message]" or "... that [message]"
             val sayingIndex = lowercaseText.indexOf(" saying ")
             val tellingIndex = lowercaseText.indexOf(" telling ")
-            val splitIndexForSaying = if (sayingIndex != -1) sayingIndex else tellingIndex
+            val thatIndex = lowercaseText.indexOf(" that ")
+            
+            var splitIndexForSaying = -1
+            var splitterLen = 0
+            
+            if (sayingIndex != -1) {
+                splitIndexForSaying = sayingIndex
+                splitterLen = 8
+            } else if (tellingIndex != -1) {
+                splitIndexForSaying = tellingIndex
+                splitterLen = 9
+            } else if (thatIndex != -1) {
+                splitIndexForSaying = thatIndex
+                splitterLen = 6
+            }
 
             if (splitIndexForSaying != -1) {
-                parsedMessage = text.substring(splitIndexForSaying + if (sayingIndex != -1) 8 else 9).trim()
-                // Recipient is before saying/telling, after " to "
-                val toIndex = lowercaseText.lastIndexOf(" to ", splitIndexForSaying)
+                messageResult = text.substring(splitIndexForSaying + splitterLen).trim()
+                
+                val beforePart = text.substring(0, splitIndexForSaying).trim()
+                val toIndex = beforePart.lowercase().lastIndexOf(" to ")
+                
                 if (toIndex != -1) {
-                    parsedRecipient = text.substring(toIndex + 4, splitIndexForSaying).trim()
+                    recipientResult = beforePart.substring(toIndex + 4).trim()
                 } else {
-                    // Try to guess recipient between starting words and saying/telling
-                    var rawRecipientPart = text.substring(0, splitIndexForSaying).trim()
-                    val stripWords = listOf("send whatsapp to", "send message to", "send mail to", "send email to", "send", "whatsapp", "email", "gmail", "text")
+                    var rawRecipientPart = beforePart
+                    val stripWords = listOf("send whatsapp to", "send telegram to", "send message to", "send mail to", "send email to", "send to", "tell", "whatsapp", "telegram", "email", "gmail", "text", "message", "sms", "ping", "buzz")
                     for (word in stripWords) {
                         if (rawRecipientPart.lowercase().startsWith(word)) {
                             rawRecipientPart = rawRecipientPart.substring(word.length).trim()
                         }
                     }
-                    parsedRecipient = rawRecipientPart
+                    recipientResult = rawRecipientPart
                 }
             } else {
                 // Pattern 2: "send [message] to [recipient] on/via/using [app]"
@@ -285,46 +343,76 @@ class MainActivity : AppCompatActivity() {
                 val appIndex = if (onIndex != -1) onIndex else viaIndex
 
                 if (toIndex != -1 && appIndex != -1 && appIndex > toIndex) {
-                    // Recipient is between " to " and " on/via "
-                    parsedRecipient = text.substring(toIndex + 4, appIndex).trim()
+                    recipientResult = text.substring(toIndex + 4, appIndex).trim()
                     
-                    // Message is before " to ", minus starting "send "
                     var rawMsg = text.substring(0, toIndex).trim()
-                    if (rawMsg.lowercase().startsWith("send ")) {
-                        rawMsg = rawMsg.substring(5).trim()
+                    val stripVerbs = listOf("send whatsapp", "send telegram", "send message", "send sms", "send text", "send", "tell", "whatsapp", "telegram", "sms", "text", "message")
+                    for (verb in stripVerbs) {
+                        if (rawMsg.lowercase().startsWith(verb)) {
+                            rawMsg = rawMsg.substring(verb.length).trim()
+                        }
                     }
-                    parsedMessage = rawMsg
+                    messageResult = rawMsg
                 } else if (toIndex != -1) {
                     // Pattern 3: "send [message] to [recipient]" (possibly ending with app keywords)
-                    parsedRecipient = text.substring(toIndex + 4).trim()
+                    recipientResult = text.substring(toIndex + 4).trim()
                     
-                    val appKeywords = listOf("on whatsapp", "on gmail", "on email", "on messages", "on sms", "via whatsapp")
+                    val appKeywords = listOf("on whatsapp", "via whatsapp", "on telegram", "via telegram", "on gmail", "on email", "on messages", "on sms")
                     for (keyword in appKeywords) {
-                        if (parsedRecipient.lowercase().endsWith(" " + keyword)) {
-                            parsedRecipient = parsedRecipient.substring(0, parsedRecipient.length - keyword.length - 1).trim()
+                        if (recipientResult.lowercase().endsWith(" " + keyword)) {
+                            recipientResult = recipientResult.substring(0, recipientResult.length - keyword.length - 1).trim()
                         }
                     }
                     
                     var rawMsg = text.substring(0, toIndex).trim()
-                    if (rawMsg.lowercase().startsWith("send ")) {
-                        rawMsg = rawMsg.substring(5).trim()
+                    val stripVerbs = listOf("send whatsapp", "send telegram", "send message", "send sms", "send text", "send", "tell", "whatsapp", "telegram", "sms", "text", "message")
+                    for (verb in stripVerbs) {
+                        if (rawMsg.lowercase().startsWith(verb)) {
+                            rawMsg = rawMsg.substring(verb.length).trim()
+                        }
                     }
-                    parsedMessage = rawMsg
+                    messageResult = rawMsg
                 } else {
-                    // Pattern 4: Fallback
-                    parsedRecipient = "Unknown"
-                    parsedMessage = text
+                    // Pattern 4: "[Verb] [Recipient] [Message]"
+                    // e.g. "WhatsApp Mummy hi" or "Text John call me"
+                    val words = text.split(Regex("\\s+"))
+                    if (words.size >= 3) {
+                        val firstWord = words[0].lowercase()
+                        val verbs = listOf("whatsapp", "telegram", "text", "sms", "mail", "email", "message", "ping", "tell")
+                        if (verbs.contains(firstWord)) {
+                            recipientResult = words[1]
+                            messageResult = words.drop(2).joinToString(" ")
+                        }
+                    }
                 }
             }
 
             // Cleanup recipient from trailing app helper words
-            val stripAppFromRecipient = listOf("on whatsapp", "via whatsapp", "on gmail", "on mail", "on email", "on sms", "on messages")
+            val stripAppFromRecipient = listOf("on whatsapp", "via whatsapp", "on telegram", "via telegram", "on gmail", "on mail", "on email", "on sms", "on messages")
             for (word in stripAppFromRecipient) {
-                if (parsedRecipient.lowercase().endsWith(" " + word)) {
-                    parsedRecipient = parsedRecipient.substring(0, parsedRecipient.length - word.length - 1).trim()
+                if (recipientResult.lowercase().endsWith(" " + word)) {
+                    recipientResult = recipientResult.substring(0, recipientResult.length - word.length - 1).trim()
                 }
             }
         }
+
+        // Post-parsing cleanups
+        recipientResult = recipientResult.replace(Regex("[.,?!;:]$"), "").trim()
+        val lowercaseRecipient = recipientResult.lowercase()
+        if (lowercaseRecipient.startsWith("a ")) recipientResult = recipientResult.substring(2).trim()
+        if (lowercaseRecipient.startsWith("the ")) recipientResult = recipientResult.substring(4).trim()
+        if (recipientResult.lowercase().startsWith("to ")) {
+            recipientResult = recipientResult.substring(3).trim()
+        }
+
+        if (messageResult.startsWith("\"") && messageResult.endsWith("\"")) {
+            messageResult = messageResult.substring(1, messageResult.length - 1)
+        }
+
+        parsedRecipient = recipientResult
+        parsedApp = appResult
+        parsedPackage = packageResult
+        parsedMessage = messageResult
 
         // Display Confirmation UI
         binding.tvConfirmRecipient.text = parsedRecipient
