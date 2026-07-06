@@ -87,25 +87,21 @@ class MainActivity : AppCompatActivity() {
             executeAutomatedAction()
         }
 
-        binding.etConsoleInput.setOnEditorActionListener { v, actionId, event ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND || 
-                actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
-                val input = binding.etConsoleInput.text.toString().trim()
-                if (input.isNotEmpty()) {
-                    logMessage("Console Input: \"$input\"")
-                    binding.etConsoleInput.text.clear()
-                    
-                    // Hide soft keyboard
-                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                    imm.hideSoftInputFromWindow(v.windowToken, 0)
-                    
-                    parseVoiceIntent(input)
-                }
-                true
-            } else {
-                false
-            }
+        binding.suggestCard1.setOnClickListener {
+            logMessage("Suggestion clicked: \"Send hi to Mummy\"")
+            parseVoiceIntent("Send hi to Mummy")
         }
+        binding.suggestCard2.setOnClickListener {
+            logMessage("Suggestion clicked: \"Enviar hola a Mamá\"")
+            binding.rbSpanish.isChecked = true
+            parseVoiceIntent("Enviar hola a Mamá")
+        }
+        binding.suggestCard3.setOnClickListener {
+            logMessage("Suggestion clicked: \"Send ready to boss\"")
+            parseVoiceIntent("Send ready to boss")
+        }
+        
+        loadHistoryFromPrefs()
     }
 
     override fun onResume() {
@@ -371,6 +367,7 @@ class MainActivity : AppCompatActivity() {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
                 binding.cardConfirmation.visibility = View.GONE
+                addHistoryItem(parsedRecipient, finalMessage, parsedApp)
             } else {
                 Toast.makeText(this, "$parsedApp is not installed on this device.", Toast.LENGTH_SHORT).show()
                 logMessage("Error: Launcher intent for $parsedPackage not found.")
@@ -381,10 +378,122 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun logMessage(msg: String) {
-        val currentLogs = binding.tvLogs.text.toString()
-        binding.tvLogs.text = "$currentLogs\n> $msg"
-        binding.scrollLog.post {
-            binding.scrollLog.fullScroll(View.FOCUS_DOWN)
+        android.util.Log.d("VoiceAction", msg)
+    }
+
+    private fun addHistoryItem(recipient: String, message: String, appName: String) {
+        saveHistoryToPrefs(recipient, message, appName)
+        createHistoryItemView(recipient, message, appName, index = 0)
+    }
+
+    private fun createHistoryItemView(recipient: String, message: String, appName: String, index: Int) {
+        binding.tvHistoryPlaceholder.visibility = View.GONE
+        
+        val cardView = androidx.cardview.widget.CardView(this).apply {
+            val params = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.setMargins(0, 0, 0, 24)
+            layoutParams = params
+            radius = 36f  // Sleek rounded corners
+            setCardBackgroundColor(android.graphics.Color.parseColor("#171324"))
+            cardElevation = 0f
+        }
+        
+        val itemLayout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(32, 24, 32, 24)
+        }
+        
+        val iconText = android.widget.TextView(this).apply {
+            text = "💬"
+            textSize = 20f
+            val params = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.marginEnd = 24
+            layoutParams = params
+        }
+        
+        val textLayout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                0,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                1.0f
+            )
+        }
+        
+        val titleText = android.widget.TextView(this).apply {
+            text = "Sent to $recipient via $appName"
+            setTextColor(android.graphics.Color.parseColor("#F9FAFB"))
+            textSize = 14f
+            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+        }
+        
+        val bodyText = android.widget.TextView(this).apply {
+            text = "\"$message\""
+            setTextColor(android.graphics.Color.parseColor("#9CA3AF"))
+            textSize = 12f
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }
+        
+        textLayout.addView(titleText)
+        textLayout.addView(bodyText)
+        
+        val badgeCard = androidx.cardview.widget.CardView(this).apply {
+            radius = 16f
+            setCardBackgroundColor(android.graphics.Color.parseColor("#10B981"))
+            cardElevation = 0f
+        }
+        
+        val badgeText = android.widget.TextView(this).apply {
+            text = "SENT"
+            setTextColor(android.graphics.Color.parseColor("#F9FAFB"))
+            textSize = 9f
+            typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.NORMAL)
+            setPadding(16, 6, 16, 6)
+        }
+        badgeCard.addView(badgeText)
+        
+        itemLayout.addView(iconText)
+        itemLayout.addView(textLayout)
+        itemLayout.addView(badgeCard)
+        
+        cardView.addView(itemLayout)
+        
+        if (index >= 0 && index <= binding.layoutRecentHistory.childCount) {
+            binding.layoutRecentHistory.addView(cardView, index)
+        } else {
+            binding.layoutRecentHistory.addView(cardView)
+        }
+    }
+
+    private fun saveHistoryToPrefs(recipient: String, message: String, appName: String) {
+        val sharedPrefs = getSharedPreferences("voice_history", Context.MODE_PRIVATE)
+        val currentStr = sharedPrefs.getString("items_list", "") ?: ""
+        val newItem = "$recipient|$message|$appName"
+        val newStr = if (currentStr.isEmpty()) newItem else "$newItem###$currentStr"
+        sharedPrefs.edit().putString("items_list", newStr).apply()
+    }
+
+    private fun loadHistoryFromPrefs() {
+        val sharedPrefs = getSharedPreferences("voice_history", Context.MODE_PRIVATE)
+        val currentStr = sharedPrefs.getString("items_list", "") ?: ""
+        if (currentStr.isNotEmpty()) {
+            binding.tvHistoryPlaceholder.visibility = View.GONE
+            val items = currentStr.split("###")
+            // Populate in reverse order to keep latest at the top since we are appending
+            for (item in items) {
+                val parts = item.split("|")
+                if (parts.size >= 3) {
+                    createHistoryItemView(parts[0], parts[1], parts[2], index = -1)
+                }
+            }
         }
     }
 

@@ -132,9 +132,9 @@
             android:buttonTint="#8B5CF6"/>
     </RadioGroup>
 
-    <!-- Console / Live Transcription View (Hacker Panel Style) -->
+    <!-- Voice Dashboard Hub (Glassmorphic Container replacing the terminal) -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/cardLogs"
+        android:id="@+id/cardDashboard"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:cardBackgroundColor="#0D0B14"
@@ -148,66 +148,144 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <!-- Log history scroll view -->
-            <ScrollView
-                android:id="@+id/scrollLog"
+            <!-- Section 1: Suggestions -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SUGGESTIONS"
+                android:textColor="#A78BFA"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif-black"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="10dp"/>
+
+            <HorizontalScrollView
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:padding="16dp">
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginBottom="16dp">
 
-                <TextView
-                    android:id="@+id/tvLogs"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="System active. Waiting for input..."
-                    android:textColor="#10B981"
-                    android:textSize="12sp"
-                    android:lineSpacingExtra="4dp"
-                    android:fontFamily="monospace"/>
-            </ScrollView>
+                    android:orientation="horizontal">
 
-            <!-- Console Command Prompt Input -->
+                    <!-- Suggestion 1 -->
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/suggestCard1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="#171324"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💬 Send hi to Mummy"
+                            android:textColor="#F9FAFB"
+                            android:textSize="12sp"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="10dp"
+                            android:fontFamily="sans-serif-medium"/>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Suggestion 2 -->
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/suggestCard2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="#171324"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🇪🇸 Enviar hola a Mamá"
+                            android:textColor="#F9FAFB"
+                            android:textSize="12sp"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="10dp"
+                            android:fontFamily="sans-serif-medium"/>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Suggestion 3 -->
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/suggestCard3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="#171324"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💬 Send ready to boss"
+                            android:textColor="#F9FAFB"
+                            android:textSize="12sp"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="10dp"
+                            android:fontFamily="sans-serif-medium"/>
+                    </androidx.cardview.widget.CardView>
+                </LinearLayout>
+            </HorizontalScrollView>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#221C35" />
+                android:background="#221C35"
+                android:layout_marginBottom="16dp"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <!-- Section 2: Recent History -->
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="10dp"
-                android:background="#0A090F">
+                android:text="RECENT ACTIONS"
+                android:textColor="#A78BFA"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif-black"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="10dp"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="> "
-                    android:textColor="#10B981"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace" />
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
-                <EditText
-                    android:id="@+id/etConsoleInput"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:id="@+id/layoutRecentHistory"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="Type action command..."
-                    android:textColorHint="#4B5563"
-                    android:textColor="#10B981"
-                    android:textSize="13sp"
-                    android:background="@android:color/transparent"
-                    android:fontFamily="monospace"
-                    android:singleLine="true"
-                    android:imeOptions="actionSend"
-                    android:inputType="text"/>
-            </LinearLayout>
+                    android:orientation="vertical">
+
+                    <!-- Default placeholder view if no history -->
+                    <TextView
+                        android:id="@+id/tvHistoryPlaceholder"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No recent actions.\nTap the microphone and speak a command to start!"
+                        android:textColor="#4B5563"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="3dp"
+                        android:gravity="center"
+                        android:layout_marginTop="48dp"
+                        android:fontFamily="sans-serif"/>
+
+                </LinearLayout>
+            </ScrollView>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
