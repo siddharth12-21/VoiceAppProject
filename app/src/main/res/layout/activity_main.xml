@@ -145,11 +145,23 @@
         android:layout_height="0dp"
         android:background="@drawable/card_glass_bg"
         android:orientation="vertical"
-        android:padding="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintTop_toBottomOf="@id/rgLanguages"
         app:layout_constraintBottom_toTopOf="@id/tvMicStatus">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:padding="16dp"
+            android:clipToPadding="false"
+            android:scrollbarStyle="outsideOverlay">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
             <!-- Section 1: Suggestions -->
             <TextView
@@ -567,32 +579,29 @@
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="10dp"/>
 
-            <ScrollView
+            <LinearLayout
+                android:id="@+id/layoutRecentHistory"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:id="@+id/layoutRecentHistory"
+                <!-- Default placeholder view if no history -->
+                <TextView
+                    android:id="@+id/tvHistoryPlaceholder"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:text="No recent actions.\nTap the microphone and speak a command to start!"
+                    android:textColor="#9CA3AF"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="3dp"
+                    android:gravity="center"
+                    android:layout_marginTop="48dp"
+                    android:fontFamily="@font/fredoka"/>
 
-                    <!-- Default placeholder view if no history -->
-                    <TextView
-                        android:id="@+id/tvHistoryPlaceholder"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="No recent actions.\nTap the microphone and speak a command to start!"
-                        android:textColor="#9CA3AF"
-                        android:textSize="12sp"
-                        android:lineSpacingExtra="3dp"
-                        android:gravity="center"
-                        android:layout_marginTop="48dp"
-                        android:fontFamily="@font/fredoka"/>
+            </LinearLayout>
 
-                </LinearLayout>
-            </ScrollView>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 
     <!-- Mic State View -->
