@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         binding.tvMicStatus.text = "Tap microphone to speak"
         
         if (result.resultCode == RESULT_OK && result.data != null) {
-            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.RESULTS_RECOGNITION)
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             if (!matches.isNullOrEmpty()) {
                 val spokenText = matches[0]
                 logMessage("Transcribed: \"$spokenText\"")
