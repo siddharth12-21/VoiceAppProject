@@ -66,9 +66,6 @@ class MainActivity : AppCompatActivity() {
             executeAutomatedAction()
         }
 
-        binding.btnCancelOverlay.setOnClickListener {
-            stopSpeechRecognition()
-        }
     }
 
     override fun onResume() {
@@ -147,11 +144,11 @@ class MainActivity : AppCompatActivity() {
                 binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
                 logMessage("Microphone active. Listening...")
                 
-                // Show Custom Listening Overlay
-                binding.layoutListeningOverlay.visibility = View.VISIBLE
+                // Swap terminal card with embedded listening visualizer
+                binding.cardLogs.visibility = View.GONE
+                binding.layoutListeningVisualizer.visibility = View.VISIBLE
                 binding.tvOverlayTitle.text = "Listening..."
                 binding.tvOverlaySubtitle.text = "Speak your command clearly"
-                binding.btnCancelOverlay.text = "CANCEL"
 
                 // Haptic feedback
                 try {
@@ -187,9 +184,8 @@ class MainActivity : AppCompatActivity() {
                 binding.tvMicStatus.text = "Error occurred. Tap to retry."
                 logMessage("Speech recognition error code: $error")
                 
-                // Keep overlay visible but display helpful diagnostics, changing button to CLOSE
+                // Show helpful diagnostics in the visualizer card
                 binding.tvOverlayTitle.text = "Speech Error"
-                binding.btnCancelOverlay.text = "CLOSE"
                 
                 if (error == SpeechRecognizer.ERROR_NO_MATCH) {
                     binding.tvOverlaySubtitle.text = "No speech detected.\n\nTip: If on Emulator, ensure Microphone uses host input (Emulator Settings -> ... -> Microphone -> toggle 'Virtual microphone uses host audio input' ON)."
@@ -199,13 +195,24 @@ class MainActivity : AppCompatActivity() {
                 }
                 
                 cleanupSpeechRecognizer()
+
+                // Revert back to console logs card after a brief 4-second delay so user is not stuck
+                binding.layoutListeningVisualizer.postDelayed({
+                    if (!isListening) {
+                        binding.layoutListeningVisualizer.visibility = View.GONE
+                        binding.cardLogs.visibility = View.VISIBLE
+                    }
+                }, 4000)
             }
 
             override fun onResults(results: Bundle?) {
                 isListening = false
                 binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
                 binding.tvMicStatus.text = "Tap microphone to speak"
-                binding.layoutListeningOverlay.visibility = View.GONE
+                
+                // Restore terminal log view
+                binding.layoutListeningVisualizer.visibility = View.GONE
+                binding.cardLogs.visibility = View.VISIBLE
 
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
@@ -229,7 +236,8 @@ class MainActivity : AppCompatActivity() {
         isListening = false
         binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
         binding.tvMicStatus.text = "Tap microphone to speak"
-        binding.layoutListeningOverlay.visibility = View.GONE
+        binding.layoutListeningVisualizer.visibility = View.GONE
+        binding.cardLogs.visibility = View.VISIBLE
         cleanupSpeechRecognizer()
     }
 
