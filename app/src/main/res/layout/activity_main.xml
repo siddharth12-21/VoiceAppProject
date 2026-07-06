@@ -230,6 +230,7 @@
                         app:cardBackgroundColor="#171324"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
+                        android:layout_marginEnd="8dp"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?android:attr/selectableItemBackground">
@@ -237,6 +238,77 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="💬 Send ready to boss"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="10dp"
+                            android:fontFamily="@font/fredoka"
+                            android:textStyle="bold"/>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Suggestion 4 -->
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/suggestCard4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="#171324"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="✈️ Telegram hello to Boss"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="10dp"
+                            android:fontFamily="@font/fredoka"
+                            android:textStyle="bold"/>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Suggestion 5 -->
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/suggestCard5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="#171324"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📧 Email update to Team"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="10dp"
+                            android:fontFamily="@font/fredoka"
+                            android:textStyle="bold"/>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Suggestion 6 -->
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/suggestCard6"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="#171324"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💬 SMS I am driving"
                             android:textColor="#FFFFFF"
                             android:textSize="12sp"
                             android:paddingHorizontal="14dp"

@@ -100,6 +100,18 @@ class MainActivity : AppCompatActivity() {
             logMessage("Suggestion clicked: \"Send ready to boss\"")
             parseVoiceIntent("Send ready to boss")
         }
+        binding.suggestCard4.setOnClickListener {
+            logMessage("Suggestion clicked: \"Telegram hello to Boss\"")
+            parseVoiceIntent("Telegram hello to Boss")
+        }
+        binding.suggestCard5.setOnClickListener {
+            logMessage("Suggestion clicked: \"Email update to Team\"")
+            parseVoiceIntent("Email update to Team")
+        }
+        binding.suggestCard6.setOnClickListener {
+            logMessage("Suggestion clicked: \"SMS I am driving\"")
+            parseVoiceIntent("SMS I am driving")
+        }
         
         binding.favContactMummy.setOnClickListener {
             logMessage("Favorite clicked: Mummy")
