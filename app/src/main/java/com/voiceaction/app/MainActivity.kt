@@ -429,18 +429,20 @@ class MainActivity : AppCompatActivity() {
         
         val titleText = android.widget.TextView(this).apply {
             text = "Sent to $recipient via $appName"
-            setTextColor(android.graphics.Color.parseColor("#F9FAFB"))
+            setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
             textSize = 14f
-            typeface = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
+            val font = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
+            setTypeface(font, android.graphics.Typeface.BOLD)
         }
         
         val bodyText = android.widget.TextView(this).apply {
             text = "\"$message\""
-            setTextColor(android.graphics.Color.parseColor("#9CA3AF"))
+            setTextColor(android.graphics.Color.parseColor("#D1D5DB"))
             textSize = 12f
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
-            typeface = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
+            val font = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
+            setTypeface(font, android.graphics.Typeface.BOLD)
         }
         
         textLayout.addView(titleText)
@@ -448,15 +450,16 @@ class MainActivity : AppCompatActivity() {
         
         val badgeCard = androidx.cardview.widget.CardView(this).apply {
             radius = 16f
-            setCardBackgroundColor(android.graphics.Color.parseColor("#10B981"))
+            setCardBackgroundColor(android.graphics.Color.parseColor("#14B8A6"))
             cardElevation = 0f
         }
         
         val badgeText = android.widget.TextView(this).apply {
             text = "SENT"
-            setTextColor(android.graphics.Color.parseColor("#F9FAFB"))
+            setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
             textSize = 9f
-            typeface = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
+            val font = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
+            setTypeface(font, android.graphics.Typeface.BOLD)
             setPadding(16, 6, 16, 6)
         }
         badgeCard.addView(badgeText)
