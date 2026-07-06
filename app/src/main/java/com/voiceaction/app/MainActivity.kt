@@ -143,13 +143,7 @@ class MainActivity : AppCompatActivity() {
     private fun startSpeechRecognition() {
         cleanupSpeechRecognizer()
         
-        // Use local offline on-device speech recognizer if supported on this Android device/emulator
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && 
-            SpeechRecognizer.isOnDeviceRecognitionAvailable(this)) {
-            speechRecognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this)
-        } else {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        }
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -228,12 +222,14 @@ class MainActivity : AppCompatActivity() {
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode)
                     putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command...")
                 }
-                try {
-                    speechLauncher.launch(fallbackIntent)
-                } catch (e: Exception) {
-                    binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-                    binding.tvMicStatus.text = "Error starting speech input"
-                    logMessage("Fallback failed: ${e.localizedMessage}")
+                runOnUiThread {
+                    try {
+                        speechLauncher.launch(fallbackIntent)
+                    } catch (e: Exception) {
+                        binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+                        binding.tvMicStatus.text = "Error starting speech input"
+                        logMessage("Fallback failed: ${e.localizedMessage}")
+                    }
                 }
             }
 
