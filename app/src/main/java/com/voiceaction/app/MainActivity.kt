@@ -26,27 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var isListening = false
 
-    // ActivityResultLauncher for native system speech recognition overlay dialog
-    private val speechLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        isListening = false
-        binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-        binding.tvMicStatus.text = "Tap microphone to speak"
-        
-        if (result.resultCode == RESULT_OK && result.data != null) {
-            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            if (!matches.isNullOrEmpty()) {
-                val spokenText = matches[0]
-                logMessage("Transcribed: \"$spokenText\"")
-                parseVoiceIntent(spokenText)
-            } else {
-                logMessage("No speech captured. Please try again.")
-            }
-        } else {
-            logMessage("Speech recognition cancelled or failed.")
-        }
-    }
+    private var speechRecognizer: SpeechRecognizer? = null
 
     // Parsed intent details
     private var parsedApp = ""
@@ -86,14 +66,8 @@ class MainActivity : AppCompatActivity() {
             executeAutomatedAction()
         }
 
-        binding.btnTestParse.setOnClickListener {
-            val testText = binding.etTestCommand.text.toString()
-            if (testText.isNotBlank()) {
-                logMessage("Manual Input: \"$testText\"")
-                parseVoiceIntent(testText)
-            } else {
-                Toast.makeText(this, "Please enter a test command first.", Toast.LENGTH_SHORT).show()
-            }
+        binding.btnCancelOverlay.setOnClickListener {
+            stopSpeechRecognition()
         }
     }
 
@@ -146,35 +120,128 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognition() {
+        cleanupSpeechRecognizer()
+        
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            
+            // Adjust length settings to prevent cutting off early
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 3000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+
             val languageCode = when {
                 binding.rbSpanish.isChecked -> "es-ES"
                 binding.rbTamil.isChecked -> "ta-IN"
                 else -> "en-US"
             }
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode)
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command clearly...")
         }
-        try {
-            isListening = true
-            binding.tvMicStatus.text = "Listening... Speak now"
-            binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
-            logMessage("Microphone active. Listening via native dialog...")
-            speechLauncher.launch(intent)
-        } catch (e: Exception) {
-            isListening = false
-            binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-            binding.tvMicStatus.text = "Error starting speech dialog"
-            logMessage("Speech recognition error: ${e.localizedMessage}")
-            Toast.makeText(this, "Speech recognition is not supported on this device.", Toast.LENGTH_SHORT).show()
-        }
+
+        speechRecognizer?.setRecognitionListener(object : android.speech.RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {
+                isListening = true
+                binding.tvMicStatus.text = "Listening... Speak now"
+                binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
+                logMessage("Microphone active. Listening...")
+                
+                // Show Custom Listening Overlay
+                binding.layoutListeningOverlay.visibility = View.VISIBLE
+                binding.tvOverlayTitle.text = "Listening..."
+                binding.tvOverlaySubtitle.text = "Speak your command clearly"
+                binding.btnCancelOverlay.text = "CANCEL"
+
+                // Haptic feedback
+                try {
+                    val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        vibrator.vibrate(android.os.VibrationEffect.createOneShot(100, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(100)
+                    }
+                } catch (e: Exception) {}
+            }
+
+            override fun onBeginningOfSpeech() {}
+            
+            override fun onRmsChanged(rmsdB: Float) {
+                // Animate voice wave ring size in real time based on audio input volume!
+                val scale = 1.0f + (rmsdB.coerceAtLeast(0f) / 8f)
+                binding.viewVoiceWave.scaleX = scale
+                binding.viewVoiceWave.scaleY = scale
+            }
+            
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {
+                binding.tvMicStatus.text = "Processing..."
+                binding.tvOverlayTitle.text = "Processing..."
+                binding.tvOverlaySubtitle.text = "Converting your voice to text..."
+            }
+
+            override fun onError(error: Int) {
+                isListening = false
+                binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+                binding.tvMicStatus.text = "Error occurred. Tap to retry."
+                logMessage("Speech recognition error code: $error")
+                
+                // Keep overlay visible but display helpful diagnostics, changing button to CLOSE
+                binding.tvOverlayTitle.text = "Speech Error"
+                binding.btnCancelOverlay.text = "CLOSE"
+                
+                if (error == SpeechRecognizer.ERROR_NO_MATCH) {
+                    binding.tvOverlaySubtitle.text = "No speech detected.\n\nTip: If on Emulator, ensure Microphone uses host input (Emulator Settings -> ... -> Microphone -> toggle 'Virtual microphone uses host audio input' ON)."
+                    logMessage("Tip: Wait for the short vibration feedback before speaking!")
+                } else {
+                    binding.tvOverlaySubtitle.text = "Error code: $error. Please try again."
+                }
+                
+                cleanupSpeechRecognizer()
+            }
+
+            override fun onResults(results: Bundle?) {
+                isListening = false
+                binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+                binding.tvMicStatus.text = "Tap microphone to speak"
+                binding.layoutListeningOverlay.visibility = View.GONE
+
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    val spokenText = matches[0]
+                    logMessage("Transcribed: \"$spokenText\"")
+                    parseVoiceIntent(spokenText)
+                } else {
+                    logMessage("No speech captured. Please try again.")
+                }
+                cleanupSpeechRecognizer()
+            }
+
+            override fun onPartialResults(partialResults: Bundle?) {}
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
+
+        speechRecognizer?.startListening(intent)
     }
 
     private fun stopSpeechRecognition() {
         isListening = false
         binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
         binding.tvMicStatus.text = "Tap microphone to speak"
+        binding.layoutListeningOverlay.visibility = View.GONE
+        cleanupSpeechRecognizer()
+    }
+
+    private fun cleanupSpeechRecognizer() {
+        try {
+            speechRecognizer?.cancel()
+            speechRecognizer?.destroy()
+        } catch (e: Exception) {
+            // Ignore errors
+        } finally {
+            speechRecognizer = null
+        }
     }
 
     // Multilingual Intent Parser Engine
