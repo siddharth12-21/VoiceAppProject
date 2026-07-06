@@ -145,22 +145,70 @@
         app:layout_constraintTop_toBottomOf="@id/rgLanguages"
         app:layout_constraintBottom_toTopOf="@id/tvMicStatus">
 
-        <ScrollView
-            android:id="@+id/scrollLog"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="16dp">
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tvLogs"
+            <!-- Log history scroll view -->
+            <ScrollView
+                android:id="@+id/scrollLog"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvLogs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="System active. Waiting for input..."
+                    android:textColor="#10B981"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="4dp"
+                    android:fontFamily="monospace"/>
+            </ScrollView>
+
+            <!-- Console Command Prompt Input -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#221C35" />
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="System active. Waiting for input..."
-                android:textColor="#10B981"
-                android:textSize="12sp"
-                android:lineSpacingExtra="4dp"
-                android:fontFamily="monospace"/>
-        </ScrollView>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:background="#0A090F">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="> "
+                    android:textColor="#10B981"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace" />
+
+                <EditText
+                    android:id="@+id/etConsoleInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Type action command..."
+                    android:textColorHint="#4B5563"
+                    android:textColor="#10B981"
+                    android:textSize="13sp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="monospace"
+                    android:singleLine="true"
+                    android:imeOptions="actionSend"
+                    android:inputType="text"/>
+            </LinearLayout>
+        </LinearLayout>
     </androidx.cardview.widget.CardView>
 
     <!-- Mic State View -->

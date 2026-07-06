@@ -87,6 +87,25 @@ class MainActivity : AppCompatActivity() {
             executeAutomatedAction()
         }
 
+        binding.etConsoleInput.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND || 
+                actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                val input = binding.etConsoleInput.text.toString().trim()
+                if (input.isNotEmpty()) {
+                    logMessage("Console Input: \"$input\"")
+                    binding.etConsoleInput.text.clear()
+                    
+                    // Hide soft keyboard
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+                    
+                    parseVoiceIntent(input)
+                }
+                true
+            } else {
+                false
+            }
+        }
     }
 
     override fun onResume() {
