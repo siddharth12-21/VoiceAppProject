@@ -26,17 +26,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var isListening = false
 
-    private var speechRecognizer: SpeechRecognizer? = null
 
-    // ActivityResultLauncher fallback for native system speech recognition overlay dialog
+    // ActivityResultLauncher for native system speech recognition overlay dialog
     private val speechLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         isListening = false
         binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
         binding.tvMicStatus.text = "Tap microphone to speak"
-        binding.layoutListeningVisualizer.visibility = View.GONE
-        binding.cardLogs.visibility = View.VISIBLE
         
         if (result.resultCode == RESULT_OK && result.data != null) {
             val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
@@ -141,143 +138,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognition() {
-        cleanupSpeechRecognizer()
-        
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            
-            // Adjust length settings to prevent cutting off early
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 3000L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
-
             val languageCode = when {
                 binding.rbSpanish.isChecked -> "es-ES"
                 binding.rbTamil.isChecked -> "ta-IN"
                 else -> "en-US"
             }
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command clearly...")
         }
-
-        speechRecognizer?.setRecognitionListener(object : android.speech.RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {
-                isListening = true
-                binding.tvMicStatus.text = "Listening... Speak now"
-                binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
-                logMessage("Microphone active. Listening...")
-                
-                // Swap terminal card with embedded listening visualizer
-                binding.cardLogs.visibility = View.GONE
-                binding.layoutListeningVisualizer.visibility = View.VISIBLE
-                binding.tvOverlayTitle.text = "Listening..."
-                binding.tvOverlaySubtitle.text = "Speak your command clearly"
-
-                // Haptic feedback
-                try {
-                    val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        vibrator.vibrate(android.os.VibrationEffect.createOneShot(100, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        vibrator.vibrate(100)
-                    }
-                } catch (e: Exception) {}
-            }
-
-            override fun onBeginningOfSpeech() {}
-            
-            override fun onRmsChanged(rmsdB: Float) {
-                // Animate voice wave ring size in real time based on audio input volume!
-                val scale = 1.0f + (rmsdB.coerceAtLeast(0f) / 8f)
-                binding.viewVoiceWave.scaleX = scale
-                binding.viewVoiceWave.scaleY = scale
-            }
-            
-            override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() {
-                binding.tvMicStatus.text = "Processing..."
-                binding.tvOverlayTitle.text = "Processing..."
-                binding.tvOverlaySubtitle.text = "Converting your voice to text..."
-            }
-
-            override fun onError(error: Int) {
-                isListening = false
-                logMessage("Background recognizer failed (code $error). Falling back to Google dialog...")
-                cleanupSpeechRecognizer()
-                
-                // Hide custom visualizer and restore log view since we are switching to system dialog
-                binding.layoutListeningVisualizer.visibility = View.GONE
-                binding.cardLogs.visibility = View.VISIBLE
-                
-                // Launch standard Google Speech Dialog overlay as a bulletproof fallback!
-                val fallbackIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                    val languageCode = when {
-                        binding.rbSpanish.isChecked -> "es-ES"
-                        binding.rbTamil.isChecked -> "ta-IN"
-                        else -> "en-US"
-                    }
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode)
-                    putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command...")
-                }
-                runOnUiThread {
-                    try {
-                        speechLauncher.launch(fallbackIntent)
-                    } catch (e: Exception) {
-                        binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-                        binding.tvMicStatus.text = "Error starting speech input"
-                        logMessage("Fallback failed: ${e.localizedMessage}")
-                    }
-                }
-            }
-
-            override fun onResults(results: Bundle?) {
-                isListening = false
-                binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-                binding.tvMicStatus.text = "Tap microphone to speak"
-                
-                // Restore terminal log view
-                binding.layoutListeningVisualizer.visibility = View.GONE
-                binding.cardLogs.visibility = View.VISIBLE
-
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (!matches.isNullOrEmpty()) {
-                    val spokenText = matches[0]
-                    logMessage("Transcribed: \"$spokenText\"")
-                    parseVoiceIntent(spokenText)
-                } else {
-                    logMessage("No speech captured. Please try again.")
-                }
-                cleanupSpeechRecognizer()
-            }
-
-            override fun onPartialResults(partialResults: Bundle?) {}
-            override fun onEvent(eventType: Int, params: Bundle?) {}
-        })
-
-        speechRecognizer?.startListening(intent)
+        try {
+            isListening = true
+            binding.tvMicStatus.text = "Listening... Speak now"
+            binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
+            logMessage("Microphone active. Opening system speech overlay...")
+            speechLauncher.launch(intent)
+        } catch (e: Exception) {
+            isListening = false
+            binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+            binding.tvMicStatus.text = "Error starting speech dialog"
+            logMessage("Speech recognition error: ${e.localizedMessage}")
+            Toast.makeText(this, "Speech recognition is not supported on this device.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun stopSpeechRecognition() {
         isListening = false
         binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
         binding.tvMicStatus.text = "Tap microphone to speak"
-        binding.layoutListeningVisualizer.visibility = View.GONE
-        binding.cardLogs.visibility = View.VISIBLE
-        cleanupSpeechRecognizer()
-    }
-
-    private fun cleanupSpeechRecognizer() {
-        try {
-            speechRecognizer?.cancel()
-            speechRecognizer?.destroy()
-        } catch (e: Exception) {
-            // Ignore errors
-        } finally {
-            speechRecognizer = null
-        }
     }
 
     // Multilingual Intent Parser Engine
