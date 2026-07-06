@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:padding="24dp"
+    android:background="@drawable/bg_gradient"
+    android:padding="20dp"
     tools:context=".MainActivity">
 
     <!-- Header Section -->
@@ -13,13 +13,25 @@
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Voice Assistant"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        android:textStyle="bold"
+        android:text="Voice Action Assistant"
+        android:textColor="#F9FAFB"
+        android:textSize="26sp"
+        android:fontFamily="sans-serif-black"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp" />
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/tvSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hands-free communication parser"
+        android:textColor="#9CA3AF"
+        android:textSize="12sp"
+        android:fontFamily="sans-serif-medium"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="2dp" />
 
     <!-- Accessibility Status Indicator -->
     <LinearLayout
@@ -28,17 +40,18 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="#1E1E1E"
-        android:padding="16dp"
+        android:background="@drawable/card_glass_bg"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
         android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle">
+        app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
 
         <View
             android:id="@+id/viewStatusDot"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:background="#FF5722"
-            android:backgroundTint="#FF5722"/>
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="#EF4444"
+            android:backgroundTint="#EF4444" />
 
         <TextView
             android:id="@+id/tvServiceStatus"
@@ -47,17 +60,19 @@
             android:layout_weight="1"
             android:layout_marginStart="12dp"
             android:text="Accessibility Service: Disabled"
-            android:textColor="#E0E0E0"
-            android:textSize="14sp" />
+            android:textColor="#E5E7EB"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-medium" />
 
         <Button
             android:id="@+id/btnEnableService"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enable"
-            android:textSize="12sp"
+            android:text="SETUP"
+            android:textSize="11sp"
+            android:textStyle="bold"
             style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:textColor="#BB86FC"/>
+            android:textColor="#8B5CF6"/>
     </LinearLayout>
 
     <!-- Language Selector Panel -->
@@ -65,10 +80,12 @@
         android:id="@+id/tvLanguageTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose Dictation Language"
-        android:textColor="#AAAAAA"
-        android:textSize="14sp"
-        android:layout_marginTop="24dp"
+        android:text="DICTATION LANGUAGE"
+        android:textColor="#8B5CF6"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-black"
+        android:layout_marginTop="20dp"
         app:layout_constraintTop_toBottomOf="@id/layoutServiceStatus"
         app:layout_constraintStart_toStartOf="parent"/>
 
@@ -77,38 +94,115 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/card_glass_bg"
+        android:padding="8dp"
+        android:layout_marginTop="6dp"
         app:layout_constraintTop_toBottomOf="@id/tvLanguageTitle">
 
         <RadioButton
             android:id="@+id/rbEnglish"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="English 🇺🇸"
-            android:textColor="#E0E0E0"
+            android:layout_weight="1"
+            android:text="English"
+            android:textSize="12sp"
+            android:textColor="#E5E7EB"
             android:checked="true"
-            android:buttonTint="#BB86FC"
-            android:layout_marginEnd="8dp"/>
+            android:buttonTint="#8B5CF6"/>
 
         <RadioButton
             android:id="@+id/rbSpanish"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Español 🇪🇸"
-            android:textColor="#E0E0E0"
-            android:buttonTint="#BB86FC"
-            android:layout_marginEnd="8dp"/>
+            android:layout_weight="1"
+            android:text="Español"
+            android:textSize="12sp"
+            android:textColor="#E5E7EB"
+            android:buttonTint="#8B5CF6"/>
 
         <RadioButton
             android:id="@+id/rbTamil"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="தமிழ் 🇮🇳"
-            android:textColor="#E0E0E0"
-            android:buttonTint="#BB86FC"
-            android:layout_marginEnd="8dp"/>
+            android:layout_weight="1"
+            android:text="தமிழ்"
+            android:textSize="12sp"
+            android:textColor="#E5E7EB"
+            android:buttonTint="#8B5CF6"/>
     </RadioGroup>
+
+    <!-- Test Text Command Input Panel -->
+    <LinearLayout
+        android:id="@+id/layoutTestInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/card_glass_bg"
+        android:padding="10dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rgLanguages">
+
+        <EditText
+            android:id="@+id/etTestCommand"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:hint="Type test command..."
+            android:textColorHint="#4B5563"
+            android:textColor="#F9FAFB"
+            android:textSize="13sp"
+            android:background="@android:color/transparent"
+            android:paddingHorizontal="8dp"
+            android:singleLine="true"
+            android:imeOptions="actionDone"/>
+
+        <Button
+            android:id="@+id/btnTestParse"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="PARSE"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:backgroundTint="#8B5CF6"
+            android:textColor="#F9FAFB"
+            android:padding="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:cornerRadius="8dp"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
+    <!-- Console / Live Transcription View (Hacker Panel Style) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardLogs"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:cardBackgroundColor="#0D0B14"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutTestInput"
+        app:layout_constraintBottom_toTopOf="@id/tvMicStatus">
+
+        <ScrollView
+            android:id="@+id/scrollLog"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvLogs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="System active. Waiting for input..."
+                android:textColor="#10B981"
+                android:textSize="12sp"
+                android:lineSpacingExtra="4dp"
+                android:fontFamily="monospace"/>
+        </ScrollView>
+    </androidx.cardview.widget.CardView>
 
     <!-- Mic State View -->
     <TextView
@@ -116,39 +210,54 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Tap microphone to speak"
-        android:textColor="#BB86FC"
-        android:textSize="16sp"
-        android:textStyle="italic"
-        app:layout_constraintBottom_toTopOf="@id/btnMic"
+        android:textColor="#A78BFA"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif-medium"
+        app:layout_constraintBottom_toTopOf="@id/layoutMicContainer"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="12dp"/>
 
-    <!-- Large Mic Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnMic"
-        android:layout_width="84dp"
-        android:layout_height="84dp"
-        android:backgroundTint="#BB86FC"
-        android:src="@android:drawable/ic_btn_speak_now"
-        app:fabCustomSize="84dp"
-        app:tint="#121212"
+    <!-- Large Mic Button Frame with pulsing glow ring -->
+    <FrameLayout
+        android:id="@+id/layoutMicContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@id/cardConfirmation"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginBottom="32dp"
-        android:contentDescription="Start voice recognition"/>
+        android:layout_marginBottom="20dp">
+
+        <View
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_mic_outer_glow"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnMic"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:backgroundTint="#8B5CF6"
+            android:src="@android:drawable/ic_btn_speak_now"
+            app:fabCustomSize="80dp"
+            app:tint="#F9FAFB"
+            android:contentDescription="Start voice recognition"
+            app:elevation="8dp"/>
+    </FrameLayout>
 
     <!-- Confirmation / Edit Card -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cardConfirmation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="#1E1E1E"
-        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="#171324"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="12dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -159,66 +268,67 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Confirm Message Delivery"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
+                android:text="Action Pending Confirmation"
+                android:textColor="#F9FAFB"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-black"
+                android:layout_marginBottom="12dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp"
+                android:background="#221C35"
+                android:padding="10dp"
+                android:backgroundTint="#221C35">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Send to: "
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp"/>
+                    android:text="Contact: "
+                    android:textColor="#9CA3AF"
+                    android:textSize="13sp"/>
 
                 <TextView
                     android:id="@+id/tvConfirmRecipient"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="John Doe"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginStart="4dp"/>
+                    android:textColor="#F9FAFB"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-black" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text=" via "
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp"
-                    android:layout_marginStart="8dp"/>
+                    android:text="  •  App: "
+                    android:textColor="#9CA3AF"
+                    android:textSize="13sp"/>
 
                 <TextView
                     android:id="@+id/tvConfirmApp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="WhatsApp"
-                    android:textColor="#03DAC6"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginStart="4dp"/>
+                    android:textColor="#10B981"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-black"/>
             </LinearLayout>
 
             <EditText
                 android:id="@+id/etConfirmMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#2C2C2C"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
+                android:background="#0D0B14"
+                android:textColor="#F9FAFB"
+                android:textSize="14sp"
                 android:padding="12dp"
                 android:minLines="3"
                 android:gravity="top|start"
-                android:hint="Type message here..."
-                android:textColorHint="#666666"
+                android:hint="Edit draft message..."
+                android:textColorHint="#4B5563"
                 android:inputType="textMultiLine"/>
 
             <LinearLayout
@@ -232,75 +342,25 @@
                     android:id="@+id/btnCancelSend"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cancel"
-                    android:textColor="#CF6679"
+                    android:text="DISCARD"
+                    android:textColor="#EF4444"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
                     android:layout_marginEnd="8dp"/>
 
                 <Button
                     android:id="@+id/btnConfirmSend"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Send Now"
-                    android:backgroundTint="#03DAC6"
-                    android:textColor="#121212"/>
+                    android:text="SEND ACTION"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="#10B981"
+                    android:textColor="#F9FAFB"
+                    app:cornerRadius="10dp"/>
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
-
-    <!-- Test Text Command Input Panel (for testing on emulators without microphone input) -->
-    <LinearLayout
-        android:id="@+id/layoutTestInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#1E1E1E"
-        android:padding="8dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/rgLanguages">
-
-        <EditText
-            android:id="@+id/etTestCommand"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Or type test command..."
-            android:textColorHint="#666666"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:background="#2C2C2C"
-            android:padding="8dp"
-            android:singleLine="true"/>
-
-        <Button
-            android:id="@+id/btnTestParse"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Parse"
-            android:textSize="12sp"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="#BB86FC"
-            android:textColor="#121212"/>
-    </LinearLayout>
-
-    <!-- Console / Live Transcription View -->
-    <ScrollView
-        android:id="@+id/scrollLog"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutTestInput"
-        app:layout_constraintBottom_toTopOf="@id/tvMicStatus">
-
-        <TextView
-            android:id="@+id/tvLogs"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Ready for voice instruction..."
-            android:textColor="#888888"
-            android:textSize="13sp"
-            android:fontFamily="monospace"/>
-    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

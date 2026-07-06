@@ -17,14 +17,36 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import com.voiceaction.app.databinding.ActivityMainBinding
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
+
+    // ActivityResultLauncher for native system speech recognition overlay dialog
+    private val speechLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        isListening = false
+        binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+        binding.tvMicStatus.text = "Tap microphone to speak"
+        
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.RESULTS_RECOGNITION)
+            if (!matches.isNullOrEmpty()) {
+                val spokenText = matches[0]
+                logMessage("Transcribed: \"$spokenText\"")
+                parseVoiceIntent(spokenText)
+            } else {
+                logMessage("No speech captured. Please try again.")
+            }
+        } else {
+            logMessage("Speech recognition cancelled or failed.")
+        }
+    }
 
     // Parsed intent details
     private var parsedApp = ""
@@ -124,106 +146,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognition() {
-        // Ensure any active speech recognizer is fully cleaned up before starting a new one
-        cleanupSpeechRecognizer()
-        
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            
-            // Adjust length settings to prevent cutting off early
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 3000L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
-
-            // Set language based on selection
             val languageCode = when {
                 binding.rbSpanish.isChecked -> "es-ES"
                 binding.rbTamil.isChecked -> "ta-IN"
                 else -> "en-US"
             }
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, languageCode)
-            putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, languageCode)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command clearly...")
         }
-
-        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {
-                isListening = true
-                binding.tvMicStatus.text = "Listening... Speak now"
-                binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
-                logMessage("Microphone active. Listening...")
-
-                // Haptic feedback to alert user precisely when to start speaking
-                try {
-                    val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        vibrator.vibrate(android.os.VibrationEffect.createOneShot(100, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        vibrator.vibrate(100)
-                    }
-                } catch (e: Exception) {}
-            }
-
-            override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(rmsdB: Float) {}
-            override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() {
-                binding.tvMicStatus.text = "Processing..."
-            }
-
-            override fun onError(error: Int) {
-                isListening = false
-                binding.tvMicStatus.text = "Error occurred. Tap to retry."
-                binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-                logMessage("Speech recognition error code: $error")
-                if (error == SpeechRecognizer.ERROR_NO_MATCH) {
-                    logMessage("Tip: Wait for the short vibration feedback before speaking!")
-                }
-                cleanupSpeechRecognizer()
-            }
-
-            override fun onResults(results: Bundle?) {
-                isListening = false
-                binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-                binding.tvMicStatus.text = "Tap microphone to speak"
-
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (!matches.isNullOrEmpty()) {
-                    val spokenText = matches[0]
-                    logMessage("Transcribed: \"$spokenText\"")
-                    parseVoiceIntent(spokenText)
-                } else {
-                    logMessage("No speech captured. Please try again.")
-                }
-                cleanupSpeechRecognizer()
-            }
-
-            override fun onPartialResults(partialResults: Bundle?) {}
-            override fun onEvent(eventType: Int, params: Bundle?) {}
-        })
-
-        speechRecognizer?.startListening(intent)
+        try {
+            isListening = true
+            binding.tvMicStatus.text = "Listening... Speak now"
+            binding.btnMic.setImageResource(android.R.drawable.presence_audio_online)
+            logMessage("Microphone active. Listening via native dialog...")
+            speechLauncher.launch(intent)
+        } catch (e: Exception) {
+            isListening = false
+            binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+            binding.tvMicStatus.text = "Error starting speech dialog"
+            logMessage("Speech recognition error: ${e.localizedMessage}")
+            Toast.makeText(this, "Speech recognition is not supported on this device.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun stopSpeechRecognition() {
         isListening = false
         binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
         binding.tvMicStatus.text = "Tap microphone to speak"
-        cleanupSpeechRecognizer()
-    }
-
-    private fun cleanupSpeechRecognizer() {
-        try {
-            speechRecognizer?.cancel()
-            speechRecognizer?.destroy()
-        } catch (e: Exception) {
-            // Ignore errors on release
-        } finally {
-            speechRecognizer = null
-        }
     }
 
     // Multilingual Intent Parser Engine
@@ -448,6 +399,5 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        speechRecognizer?.destroy()
     }
 }
