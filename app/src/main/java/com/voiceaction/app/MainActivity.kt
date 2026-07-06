@@ -431,7 +431,7 @@ class MainActivity : AppCompatActivity() {
             text = "Sent to $recipient via $appName"
             setTextColor(android.graphics.Color.parseColor("#F9FAFB"))
             textSize = 14f
-            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
         }
         
         val bodyText = android.widget.TextView(this).apply {
@@ -440,6 +440,7 @@ class MainActivity : AppCompatActivity() {
             textSize = 12f
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
         }
         
         textLayout.addView(titleText)
@@ -455,7 +456,7 @@ class MainActivity : AppCompatActivity() {
             text = "SENT"
             setTextColor(android.graphics.Color.parseColor("#F9FAFB"))
             textSize = 9f
-            typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.NORMAL)
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(this@MainActivity, R.font.fredoka)
             setPadding(16, 6, 16, 6)
         }
         badgeCard.addView(badgeText)
