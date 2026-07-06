@@ -28,6 +28,30 @@ class MainActivity : AppCompatActivity() {
 
     private var speechRecognizer: SpeechRecognizer? = null
 
+    // ActivityResultLauncher fallback for native system speech recognition overlay dialog
+    private val speechLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        isListening = false
+        binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+        binding.tvMicStatus.text = "Tap microphone to speak"
+        binding.layoutListeningVisualizer.visibility = View.GONE
+        binding.cardLogs.visibility = View.VISIBLE
+        
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!matches.isNullOrEmpty()) {
+                val spokenText = matches[0]
+                logMessage("Transcribed: \"$spokenText\"")
+                parseVoiceIntent(spokenText)
+            } else {
+                logMessage("No speech captured from system dialog.")
+            }
+        } else {
+            logMessage("System speech dialog cancelled or failed.")
+        }
+    }
+
     // Parsed intent details
     private var parsedApp = ""
     private var parsedRecipient = ""
@@ -119,7 +143,13 @@ class MainActivity : AppCompatActivity() {
     private fun startSpeechRecognition() {
         cleanupSpeechRecognizer()
         
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        // Use local offline on-device speech recognizer if supported on this Android device/emulator
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && 
+            SpeechRecognizer.isOnDeviceRecognitionAvailable(this)) {
+            speechRecognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this)
+        } else {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        }
         
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -180,29 +210,31 @@ class MainActivity : AppCompatActivity() {
 
             override fun onError(error: Int) {
                 isListening = false
-                binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
-                binding.tvMicStatus.text = "Error occurred. Tap to retry."
-                logMessage("Speech recognition error code: $error")
-                
-                // Show helpful diagnostics in the visualizer card
-                binding.tvOverlayTitle.text = "Speech Error"
-                
-                if (error == SpeechRecognizer.ERROR_NO_MATCH) {
-                    binding.tvOverlaySubtitle.text = "No speech detected.\n\nTip: If on Emulator, ensure Microphone uses host input (Emulator Settings -> ... -> Microphone -> toggle 'Virtual microphone uses host audio input' ON)."
-                    logMessage("Tip: Wait for the short vibration feedback before speaking!")
-                } else {
-                    binding.tvOverlaySubtitle.text = "Error code: $error. Please try again."
-                }
-                
+                logMessage("Background recognizer failed (code $error). Falling back to Google dialog...")
                 cleanupSpeechRecognizer()
-
-                // Revert back to console logs card after a brief 4-second delay so user is not stuck
-                binding.layoutListeningVisualizer.postDelayed({
-                    if (!isListening) {
-                        binding.layoutListeningVisualizer.visibility = View.GONE
-                        binding.cardLogs.visibility = View.VISIBLE
+                
+                // Hide custom visualizer and restore log view since we are switching to system dialog
+                binding.layoutListeningVisualizer.visibility = View.GONE
+                binding.cardLogs.visibility = View.VISIBLE
+                
+                // Launch standard Google Speech Dialog overlay as a bulletproof fallback!
+                val fallbackIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    val languageCode = when {
+                        binding.rbSpanish.isChecked -> "es-ES"
+                        binding.rbTamil.isChecked -> "ta-IN"
+                        else -> "en-US"
                     }
-                }, 4000)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode)
+                    putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command...")
+                }
+                try {
+                    speechLauncher.launch(fallbackIntent)
+                } catch (e: Exception) {
+                    binding.btnMic.setImageResource(android.R.drawable.ic_btn_speak_now)
+                    binding.tvMicStatus.text = "Error starting speech input"
+                    logMessage("Fallback failed: ${e.localizedMessage}")
+                }
             }
 
             override fun onResults(results: Bundle?) {
