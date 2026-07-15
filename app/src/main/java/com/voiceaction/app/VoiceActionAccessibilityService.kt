@@ -116,7 +116,14 @@ class VoiceActionAccessibilityService : AccessibilityService() {
                     Log.d(TAG, "WhatsApp: Found contact row text. Clicking to open chat.")
                     clickNodeOrParent(contactNode)
                 } else {
-                    Log.w(TAG, "WhatsApp: Contact row text matching '${action.recipient}' not found in search results yet.")
+                    Log.w(TAG, "WhatsApp: Contact row text matching '${action.recipient}' not found. Trying fallback first list result.")
+                    val fallbackContact = findFirstListResult(freshRoot)
+                    if (fallbackContact != null) {
+                        Log.d(TAG, "WhatsApp: Fallback: Clicking first contact result view in search list.")
+                        clickNodeOrParent(fallbackContact)
+                    } else {
+                        Log.w(TAG, "WhatsApp: Fallback contact result not found.")
+                    }
                 }
             } else {
                 // 3. Search input is not active. Find and click any node containing "search" keyword text/id/desc
@@ -270,6 +277,37 @@ class VoiceActionAccessibilityService : AccessibilityService() {
         }
         return false
     }
+    private fun findFirstListResult(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+        if (node == null) return null
+        val className = node.className?.toString() ?: ""
+        if (className.contains("RecyclerView") || className.contains("ListView")) {
+            // Find the first clickable child of the list
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                if (child.isClickable) {
+                    return child
+                }
+                val clickableSub = findFirstClickableInSubtree(child)
+                if (clickableSub != null) return clickableSub
+            }
+        }
+        for (i in 0 until node.childCount) {
+            val result = findFirstListResult(node.getChild(i))
+            if (result != null) return result
+        }
+        return null
+    }
+
+    private fun findFirstClickableInSubtree(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+        if (node == null) return null
+        if (node.isClickable) return node
+        for (i in 0 until node.childCount) {
+            val res = findFirstClickableInSubtree(node.getChild(i))
+            if (res != null) return res
+        }
+        return null
+    }
+
     private fun findContactResultNode(node: AccessibilityNodeInfo?, text: String): AccessibilityNodeInfo? {
         if (node == null) return null
         

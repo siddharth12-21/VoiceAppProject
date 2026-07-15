@@ -476,10 +476,18 @@ class MainActivity : AppCompatActivity() {
             logMessage("Parsed Intent -> App: $parsedApp, Recipient: $parsedRecipient, Msg: \"$parsedMessage\"")
         }
 
-        // Translate the parsed message text BACK to the original language spoken, if not English
-        if (originalLang != "en") {
-            logMessage("Translating discerned message back to target language ($originalLang)...")
-            translateText(messageResult, "en", originalLang) { translatedMessage ->
+        // Determine target delivery language
+        val targetLang = when {
+            binding.rbDeliveryEnglish.isChecked -> "en"
+            binding.rbDeliverySpanish.isChecked -> "es"
+            binding.rbDeliveryTamil.isChecked -> "ta"
+            else -> originalLang // rbDeliveryAsSpoken checked, fallback to original spoken language
+        }
+
+        // Translate the parsed message text to the target delivery language if not English
+        if (targetLang != "en") {
+            logMessage("Translating discerned message to target delivery language ($targetLang)...")
+            translateText(messageResult, "en", targetLang) { translatedMessage ->
                 displayAndFinish(translatedMessage)
             }
         } else {
